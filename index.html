@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 파스텔 가위바위보 게임</title>
+    
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #c7ecee; /* 파스텔톤 배경색 */
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1 { color: #333; margin-bottom: 10px; }
+
+        .record-board {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #e6e6fa; /* 파스텔톤 전적판 배경색 */
+            border-radius: 8px;
+        }
+
+        /* 가위바위보 버튼 크기 확대 및 디자인 */
+        .choices {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px; 
+            margin: 30px 0;
+        }
+
+        .choice-btn {
+            font-size: 60px; /* 이모지 크기 */
+            padding: 25px; /* 버튼 패딩 */
+            border: none;
+            border-radius: 15px; 
+            background-color: #ffe0b2; /* 파스텔톤 버튼 배경색 */
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            flex: 1; 
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 매치 결과 표시 */
+        .match-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .display-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .choice-icon {
+            font-size: 80px; 
+            padding: 10px;
+            min-height: 100px;
+            line-height: 80px;
+        }
+
+        #result-text {
+            flex: 1.5;
+            font-size: 24px;
+            color: #00796b;
+        }
+
+        /* 다시 하기 버튼 */
+        .action-btn {
+            padding: 12px 25px; 
+            margin-top: 25px;
+            font-size: 18px;
+            background-color: #ff8a80; /* 파스텔톤 빨간색 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background-color: #e57373;
+        }
+
+        /* 반응형 조정 */
+        @media (max-width: 480px) {
+            .choice-btn {
+                font-size: 40px;
+                padding: 15px;
+            }
+            .choice-icon {
+                font-size: 60px;
+            }
+            #result-text {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="game-container">
+        <h1>가위바위보 (RPS)</h1>
+
+        <div class="record-board">
+            <h2>나의 전적: <span id="win-count">0</span>승 <span id="draw-count">0</span>무 <span id="lose-count">0</span>패</h2>
+        </div>
+
+        <div class="choices">
+            <button class="choice-btn" id="scissors-btn" data-choice="가위">
+                ✂️
+            </button>
+            <button class="choice-btn" id="rock-btn" data-choice="바위">
+                ✊
+            </button>
+            <button class="choice-btn" id="paper-btn" data-choice="보">
+                🖐️
+            </button>
+        </div>
+
+        <div class="match-display">
+            <div class="display-item">
+                <p>나</p>
+                <div id="user-display" class="choice-icon">❓</div>
+            </div>
+            <h2 id="result-text">선택해 주세요!</h2>
+            <div class="display-item">
+                <p>컴퓨터</p>
+                <div id="computer-display" class="choice-icon">❓</div>
+            </div>
+        </div>
+
+        <button id="reset-button" class="action-btn" style="display: none;">다시 하기</button>
+    </div>
+
+    <script>
+        // DOMContentLoaded를 사용하여 HTML 구조 로드 완료 후 스크립트 실행을 보장합니다.
+        document.addEventListener('DOMContentLoaded', () => {
+            // 핵심 로직 데이터 구조 정의
+            const choices = {
+                '가위': { display: '✂️', beats: '보' },
+                '바위': { display: '✊', beats: '가위' },
+                '보': { display: '🖐️', beats: '바위' }
+            };
+
+            let record = {
+                win: 0,
+                draw: 0,
+                lose: 0
+            };
+
+            // DOM 요소 연결
+            const userDisplay = document.getElementById('user-display');
+            const computerDisplay = document.getElementById('computer-display');
+            const resultText = document.getElementById('result-text');
+            const resetButton = document.getElementById('reset-button');
+            const choiceButtons = document.querySelectorAll('.choice-btn');
+
+            // 전적 표시 DOM
+            const winCountSpan = document.getElementById('win-count');
+            const drawCountSpan = document.getElementById('draw-count');
+            const loseCountSpan = document.getElementById('lose-count');
+
+
+            // 컴퓨터 선택 함수 (랜덤)
+            function getComputerChoice() {
+                const keys = Object.keys(choices);
+                const randomIndex = Math.floor(Math.random() * keys.length);
+                return keys[randomIndex];
+            }
+
+            // 전적 업데이트 및 화면 반영 함수
+            function updateRecord(result) {
+                if (result === '승리') {
+                    record.win++;
+                } else if (result === '무승부') {
+                    record.draw++;
+                } else {
+                    record.lose++;
+                }
+                
+                // 화면 업데이트
+                winCountSpan.textContent = record.win;
+                drawCountSpan.textContent = record.draw;
+                loseCountSpan.textContent = record.lose;
+            }
+
+            // 게임 실행 함수
+            function playGame(userChoice) {
+                // 이미 게임이 끝났다면 실행 방지
+                if (resetButton.style.display === 'block') {
+                    return;
+                }
+
+                const computerChoice = getComputerChoice();
+                let result = '';
+
+                // A. 그림 표시 업데이트
+                userDisplay.textContent = choices[userChoice].display;
+                computerDisplay.textContent = choices[computerChoice].display;
+
+                // B. 승패 판정
+                if (userChoice === computerChoice) {
+                    result = '무승부';
+                } else if (choices[userChoice].beats === computerChoice) {
+                    result = '승리';
+                } else {
+                    result = '패배';
+                }
+
+                // C. 결과 텍스트 및 전적 업데이트
+                resultText.textContent = `${userChoice} vs ${computerChoice}: ${result}입니다!`;
+                updateRecord(result);
+
+                // D. 버튼 비활성화 및 다시 하기 버튼 표시
+                choiceButtons.forEach(btn => btn.disabled = true);
+                resetButton.style.display = 'block';
+            }
+
+            // 이벤트 리스너 연결
+            choiceButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const userChoice = event.currentTarget.getAttribute('data-choice');
+                    playGame(userChoice);
+                });
+            });
+
+            // 다시 하기 버튼 로직 (UI 초기화)
+            resetButton.addEventListener('click', () => {
+                // UI 초기 상태로 되돌리기
+                userDisplay.textContent = '❓';
+                computerDisplay.textContent = '❓';
+                resultText.textContent = '선택해 주세요!';
+                
+                // 버튼 활성화 및 다시 하기 버튼 숨기기
+                choiceButtons.forEach(btn => btn.disabled = false);
+                resetButton.style.display = 'none';
+            });
+        }); // DOMContentLoaded 끝
+    </script>
+</body>
+</html>
