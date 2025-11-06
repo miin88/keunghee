@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O/X 퀴즈 | 경제 주체의 역할 (30문제 중 10문제 랜덤 출제)</title>
+    <style>
+        /* =================== 1. 반응형 및 기본 스타일 (CSS) =================== */
+
+        :root {
+            --bg-color: #f0f8ff;    /* AliceBlue */
+            --container-color: #fffacd; /* LemonChiffon */
+            --primary-color: #4682b4; /* SteelBlue */
+            --correct-color: #2e8b57; /* SeaGreen */
+            --incorrect-color: #a52a2a; /* Brown */
+            --o-button-color: #98fb98; /* PaleGreen */
+            --x-button-color: #ffb6c1; /* LightPink */
+            --font-size-q: 1.875rem; 
+            --font-size-h1: 2.2rem;
+        }
+
+        /* 미디어 쿼리: 모바일 최적화 (폰트 크기 조정) */
+        @media (max-width: 600px) {
+            :root {
+                --font-size-q: 1.5rem; 
+                --font-size-h1: 1.8rem;
+            }
+            .ox-button {
+                padding: 15px 30px !important;
+                font-size: 2.0rem !important;
+            }
+            .question-text {
+                margin-bottom: 20px !important;
+            }
+            .feedback-message {
+                font-size: 1.8rem !important;
+            }
+            .answer-reason {
+                font-size: 1.1rem !important;
+            }
+            .quiz-container {
+                padding: 20px 15px;
+            }
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background-color: var(--bg-color); 
+            margin: 0;
+            padding: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow: auto; 
+        }
+
+        .quiz-container {
+            width: 95%; 
+            max-width: 900px; 
+            min-height: 90vh; 
+            background-color: var(--container-color); 
+            padding: 30px 30px; 
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); 
+            position: relative;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: var(--font-size-h1); 
+            font-weight: 700;
+        }
+        
+        .quiz-wrapper {
+            flex-grow: 1; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        .quiz-track {
+            display: flex;
+            height: 100%; 
+            transition: transform 0.5s ease-in-out;
+            margin: 0 -30px; 
+        }
+
+        .quiz-slide {
+            min-width: 100%; 
+            height: 100%; 
+            box-sizing: border-box;
+            padding: 10px 30px; 
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            overflow-y: auto; 
+        }
+
+        .question-content {
+            flex-grow: 1;
+            padding-bottom: 20px; 
+        }
+
+        .question-number {
+            font-size: 1.5rem; 
+            color: var(--primary-color); 
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speaker-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--correct-color);
+            transition: color 0.1s;
+        }
+        .speaker-icon:hover {
+            color: var(--primary-color);
+        }
+
+        .question-text {
+            font-size: var(--font-size-q); 
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 800; 
+            color: #1a1a1a;
+        }
+
+        .ox-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 40px; 
+            margin-top: 15px; 
+            margin-bottom: 15px;
+        }
+
+        .ox-button {
+            padding: 18px 50px;
+            font-size: 2.5rem; 
+            font-weight: 900;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex-grow: 1;
+            max-width: 180px;
+        }
+        .ox-button.O { background-color: var(--o-button-color); color: var(--correct-color); }
+        .ox-button.X { background-color: var(--x-button-color); color: var(--incorrect-color); }
+        .ox-button:disabled { opacity: 0.7; cursor: default; }
+
+        .feedback-message {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            min-height: 35px; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .feedback-correct { color: var(--correct-color); }
+        .feedback-incorrect { color: var(--incorrect-color); }
+
+        .answer-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fcfcfc; 
+            border-left: 6px solid var(--primary-color); 
+            border-radius: 8px;
+            text-align: left;
+            display: none; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .answer-result {
+            font-size: 1.7rem; 
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .answer-reason {
+            font-size: 1.3rem; 
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .next-button {
+            padding: 15px 30px;
+            background-color: var(--primary-color); 
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 20px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s;
+            display: none; 
+            align-self: center;
+            flex-shrink: 0; 
+        }
+        .next-button:active {
+            transform: translateY(1px);
+        }
+
+        .completion-slide {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            padding: 60px 0;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>핵심 개념 O/X 퀴즈 | 경제 주체의 역할 (10문제 출제)</h1>
+        
+        <div class="quiz-wrapper">
+            <div class="quiz-track" id="quizTrack">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // =================== 3. 교재 기반 핵심 개념 30문제 풀 ===================
+        const allQuestions = [
+            {q: "합리적인 선택은 포기한 것의 가치인 **기회비용**을 고려하여, 선택으로 얻는 편익이 비용보다 클 때 이루어진다.", a: "O", reason: "기회비용은 합리적 선택의 핵심 판단 기준이며, 명시적 비용과 암묵적 비용(포기한 가치)을 모두 포함합니다."},
+            {q: "가계는 생산물 시장의 **수요자**이자 생산 요소 시장의 **공급자** 역할을 수행한다.", a: "O", reason: "가계는 기업이 만든 물건을 소비하고, 기업에게 노동력, 자본 등을 제공하는 주요 경제 주체입니다."},
+            {q: "기업의 가장 기본적인 역할은 **이윤 극대화**를 목표로 생산 활동을 하는 것이다.", a: "O", reason: "이윤 추구는 기업 활동의 가장 핵심적인 목적이며, 이를 통해 자원 배분의 효율성이 높아집니다."},
+            {q: "정부는 시장 실패를 보완하여 경제의 **효율성**과 **형평성**을 확보하는 역할을 한다.", a: "O", reason: "정부는 독과점 규제(효율성)와 소득 재분배(형평성) 등의 정책을 통해 시장에 개입합니다."},
+            {q: "공공재는 **경합성**과 **배제성**의 특성을 모두 가지므로, 시장 기능에 맡겨도 적절하게 공급된다.", a: "X", reason: "공공재는 **비경합성**과 **비배제성**을 가지므로 시장에서 과소 생산되어 정부 개입이 필요합니다."},
+            {q: "외부 불경제(환경 오염 등)가 발생하면 시장은 사회적으로 바람직한 수준보다 **과다 생산**되는 문제가 생긴다.", a: "O", reason: "기업이 외부 비용을 지불하지 않아 사적 비용이 낮아지므로 이윤 극대화를 위해 과잉 생산합니다."},
+            {q: "기업이 환경 오염 방지 시설에 투자하는 것은 단기적으로 비용 증가를 가져오지만, 장기적으로는 기업의 **사회적 책임**을 이행하는 것이다.", a: "O", reason: "사회적 책임 이행은 기업의 이미지와 신뢰도를 높여 장기적 생존에 기여합니다."},
+            {q: "정부의 **소득 재분배** 정책은 주로 **사회적 형평성** 증진을 **주된 목표**로 한다.", a: "O", reason: "조세와 복지 제도를 통해 소득 격차를 완화하는 것이 재분배의 핵심 목적입니다."},
+            {q: "가계의 합리적 선택은 항상 개인에게 가장 큰 만족을 주지만, 사회 전체의 **형평성**까지 보장하지는 못한다.", a: "O", reason: "개인의 합리적 선택이 이기주의로 흐르면 사회적 비합리성(예: 환경 파괴)을 초래할 수 있습니다."},
+            {q: "윤리적 소비는 **가격**이 저렴한 제품을 선택하는 것보다, **생산 과정의 윤리성**을 고려하는 데 초점을 맞춘다.", a: "O", reason: "윤리적 소비는 환경, 노동 조건 등 사회적 가치를 우선시하는 소비 행위입니다."},
+            {q: "지속가능발전은 현재 세대의 필요 충족과 **미래 세대**의 발전 가능성을 고려하여 균형을 추구하는 것이다.", a: "O", reason: "세대 내 형평성과 세대 간 형평성을 모두 중시합니다."},
+            {q: "외부 경제(긍정적 외부 효과)는 사회적 편익이 사적 편익보다 크므로, 시장에서는 **과소 생산**된다.", a: "O", reason: "이익을 주고도 보상을 받지 못해 생산 동기가 낮아져 필요한 양보다 적게 공급됩니다."},
+            {q: "기업이 독점적 지위를 이용하여 가격을 높이는 행위는 **시장 실패**의 한 예로, **자원 배분의 효율성**을 저해한다.", a: "O", reason: "독과점은 경쟁을 제한하여 시장 기능을 왜곡하고 비효율적인 자원 배분을 초래합니다."},
+            {q: "가계가 절약하여 저축을 늘리는 행위는 단기적으로는 소비 위축을 가져오지만, 장기적으로는 **기업 투자**의 원천이 된다.", a: "O", reason: "저축은 자본 시장을 통해 기업의 투자 자금으로 활용되어 경제 성장에 기여합니다."},
+            {q: "정부의 **공정 경쟁 질서 확립** 노력은 주로 독과점 규제, 불공정 거래 행위 단속 등을 통해 이루어진다.", a: "O", reason: "이는 시장 경제의 효율성을 확보하기 위한 정부의 중요한 역할입니다."},
+            {q: "**합리적 선택의 한계**는 개인적으로 이익이 되는 선택이 사회 전체적으로는 부정적인 결과를 초래할 때 발생한다.", a: "O", reason: "공유지의 비극과 같은 현상이 대표적이며, 사회적 비합리성으로 이어집니다."},
+            {q: "기업의 사회적 책임 활동(CSR)은 **법적 책임** 이외의 **윤리적, 자선적 책임**까지 포괄하는 개념이다.", a: "O", reason: "기업은 법적 의무를 넘어 사회에 기여하는 윤리적 책임까지 다해야 합니다."},
+            {q: "가계는 친환경 제품을 구매함으로써 기업에게 **친환경 생산 방식**을 요구하는 간접적인 역할을 한다.", a: "O", reason: "소비자의 선호는 기업의 생산 방침에 직접적인 영향을 미칩니다."},
+            {q: "시장 경제 체제의 기본 질서를 유지하기 위해 정부는 **사유 재산권**을 보장해야 한다.", a: "O", reason: "사유 재산권 보장은 자본주의 시장 경제의 가장 기본적인 전제 조건입니다."},
+            {q: "**공유지의 비극**은 공유 자원의 **비배제성**과 **경합성** 특성 때문에 자원이 고갈되는 현상이다.", a: "O", reason: "누구나 사용할 수 있고(비배제성), 한 사람의 사용이 다른 사람의 사용을 방해(경합성)하기 때문입니다."},
+            {q: "정부가 외부 불경제 해결을 위해 생산자에게 부과한 **환경세**는 제품 가격 상승을 유발하여 **소비자에게도 영향**을 미친다.", a: "O", reason: "생산 비용 증가는 가격 인상으로 이어져 소비자에게 전가될 수 있습니다."},
+            {q: "기업이 협력업체와 공정하게 거래하고 상생을 추구하는 것은 **윤리 경영**의 중요한 실천 방안 중 하나이다.", a: "O", reason: "윤리 경영은 기업과 관련된 모든 이해관계자에게 공정함을 추구합니다."},
+            {q: "가계는 이윤 극대화를 목표로 생산 활동을 하며, 이는 경제 성장의 가장 중요한 원동력이다.", a: "X", reason: "**기업**이 이윤 극대화를 목표로 생산 활동을 하며, 가계는 소비 활동을 주 목표로 합니다."},
+            {q: "지속가능발전은 **경제, 사회, 환경** 세 가지 측면의 조화로운 발전을 추구한다.", a: "O", reason: "경제적 효율성, 사회적 형평성, 환경적 지속가능성을 통합적으로 고려합니다."},
+            {q: "정부의 역할 중 **경제 안정화**는 물가 안정, 고용 증대 등 거시 경제의 안정을 꾀하는 것이다.", a: "O", reason: "이는 경기 침체나 인플레이션 시기에 정부가 수행하는 중요한 역할입니다."},
+            {q: "**암묵적 비용**은 합리적 선택 시 실제로 금전 지출이 있었던 포기한 대안의 가치를 의미한다.", a: "X", reason: "암묵적 비용은 금전 지출이 없는 포기한 대안의 가치이고, 금전 지출이 있는 비용은 **명시적 비용**입니다."},
+            {q: "기업의 **책임 투자**는 투자 시 재무 성과 외에 **ESG(환경, 사회, 지배구조)** 요소를 고려하는 것을 말한다.", a: "O", reason: "이는 기업의 장기적인 가치와 지속가능성을 평가하는 새로운 기준입니다."},
+            {q: "정부가 시장에 개입하는 궁극적인 이유는 **형평성**을 확보하는 데 있으며, 효율성 증진은 민간에 맡기는 것이 원칙이다.", a: "X", reason: "정부는 형평성뿐만 아니라 시장 실패 보완을 통한 **효율성** 증진에도 개입합니다."},
+            {q: "**시장 경제**에서 **가계**는 소비를 통해 어떤 물건을 얼마나 생산할지 결정하는 데 중요한 역할을 한다.", a: "O", reason: "소비자의 수요(가계의 소비)가 생산자(기업)에게 신호를 보내어 생산 방향을 결정합니다."},
+            {q: "가계가 가격이 비싸더라도 재활용 포장재를 사용한 제품을 구매하는 것은 **단기적 효용**보다 **장기적/사회적 가치**를 더 중요시했기 때문이다.", a: "O", reason: "윤리적 소비는 단기적인 효용이나 비용보다 장기적인 만족감, 환경, 사회적 가치를 우선시하는 선택입니다."},
+        ];
+
+        // =================== 4. 퀴즈 실행 및 TTS 로직 (JavaScript) ===================
+
+        const TOTAL_QUIZ_COUNT = 10; // 30문제 풀 중 10문제 랜덤 출제
+        let selectedQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let ttsActivated = false; 
+
+        const quizTrack = document.getElementById('quizTrack');
+        const synth = window.speechSynthesis; 
+
+        /**
+         * TTS: 텍스트를 음성으로 읽어줍니다. 
+         */
+        function speak(text) {
+            if (!ttsActivated) return;
+            if (!synth) return;
+
+            if (synth.speaking) {
+                synth.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+
+            const voices = synth.getVoices();
+            const koreanVoice = voices.find(voice => voice.lang.startsWith('ko'));
+            
+            if (koreanVoice) {
+                utterance.voice = koreanVoice;
+            }
+
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            synth.speak(utterance);
+        }
+        
+        /**
+         * TTS 기능을 강제로 활성화합니다. (브라우저 정책 우회 시도)
+         */
+        function activateTTS() {
+            if (ttsActivated) return;
+            
+            const testUtterance = new SpeechSynthesisUtterance(" ");
+            synth.speak(testUtterance);
+            
+            testUtterance.onend = () => {
+                 ttsActivated = true;
+                 console.log("TTS 기능이 성공적으로 활성화되었습니다.");
+                 speakQuestion(currentQuestionIndex); 
+            };
+            
+            if (ttsActivated === false) {
+                 ttsActivated = true;
+            }
+        }
+
+        /**
+         * 배열을 무작위로 섞고, 지정된 개수만큼 선택합니다.
+         */
+        function selectRandomQuestions(arr, num) {
+            const shuffled = arr.slice(); 
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled.slice(0, num); 
+        }
+
+        /**
+         * 퀴즈 HTML 생성 및 초기화
+         */
+        function initQuiz() {
+            ttsActivated = false; 
+            if (synth.speaking) synth.cancel();
+
+            selectedQuestions = selectRandomQuestions(allQuestions, TOTAL_QUIZ_COUNT);
+            currentQuestionIndex = 0;
+            score = 0;
+            quizTrack.innerHTML = ''; 
+
+            selectedQuestions.forEach((qData, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'quiz-slide';
+                slide.setAttribute('data-answer', qData.a);
+                slide.id = `slide-${index}`;
+
+                const questionHTML = `
+                    <div class="question-content">
+                        <div class="question-number">
+                            문제 ${index + 1}/${TOTAL_QUIZ_COUNT}
+                            <span class="speaker-icon" onclick="speakQuestion(${index})">🔊</span>
+                        </div>
+                        <div class="question-text" id="q-text-${index}">${qData.q}</div>
+                        <div class="ox-buttons">
+                            <button class="ox-button O" onclick="checkAnswer(this, 'O')">O</button>
+                            <button class="ox-button X" onclick="checkAnswer(this, 'X')">X</button>
+                        </div>
+                        <div class="feedback-message" id="feedback-${index}"></div>
+                        <div class="answer-container">
+                            <div class="answer-result">정답: ${qData.a}</div>
+                            <div class="answer-reason">
+                                <strong>해설:</strong> ${qData.reason}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="next-button" onclick="nextQuestion()">${index === TOTAL_QUIZ_COUNT - 1 ? '결과 보기' : '다음 문제'}</button>
+                `;
+                slide.innerHTML = questionHTML;
+                quizTrack.appendChild(slide);
+            });
+
+            // 완료 화면 생성
+            const completionSlide = document.createElement('div');
+            completionSlide.className = 'quiz-slide completion-slide';
+            completionSlide.id = 'completionScreen';
+            completionSlide.innerHTML = `
+                <p>✨ 퀴즈가 완료되었습니다! ✨</p>
+                <p>최종 점수: <span id="scoreDisplay">0점</span> / ${TOTAL_QUIZ_COUNT * 10}점</p>
+                <button class="next-button restart-button" style="display: block;" onclick="restartQuiz()">다시 시작</button>
+            `;
+            quizTrack.appendChild(completionSlide);
+
+            updateSlide(true); 
+        }
+
+        /**
+         * 현재 문제의 텍스트를 읽어줍니다.
+         */
+        function speakQuestion(index) {
+            if (index >= selectedQuestions.length) return;
+            const questionText = document.getElementById(`q-text-${index}`).textContent;
+            const fullText = `문제 ${index + 1}번. ${questionText}. 오 또는 엑스 중 답을 선택하세요.`;
+            speak(fullText);
+        }
+
+        /**
+         * 슬라이드 위치 업데이트 및 음성 재생
+         */
+        function updateSlide(shouldSpeak = false) {
+            const offset = -currentQuestionIndex * 100;
+            quizTrack.style.transform = `translateX(${offset}%)`;
+
+            if (shouldSpeak && currentQuestionIndex < TOTAL_QUIZ_COUNT) {
+                setTimeout(() => {
+                    if(ttsActivated) {
+                        speakQuestion(currentQuestionIndex);
+                    } 
+                }, 100); 
+            }
+        }
+
+        /**
+         * O/X 버튼 클릭 시 정답 확인 및 피드백 제공
+         */
+        function checkAnswer(button, selectedAnswer) {
+            if (!ttsActivated) {
+                activateTTS();
+            }
+            
+            const currentSlide = button.closest('.quiz-slide');
+            if (currentQuestionIndex >= selectedQuestions.length) return; 
+
+            const questionData = selectedQuestions[currentQuestionIndex];
+            const correctAnswer = questionData.a;
+            
+            const answerContainer = currentSlide.querySelector('.answer-container');
+            const nextButton = currentSlide.querySelector('.next-button');
+            const oxButtons = currentSlide.querySelectorAll('.ox-button');
+            const feedbackMessage = currentSlide.querySelector('.feedback-message');
+
+            if (oxButtons[0].disabled) { return; } 
+
+            let isCorrect = (selectedAnswer === correctAnswer);
+            
+            let feedbackText = isCorrect ? "정답입니다!" : "오답입니다.";
+            feedbackText += ` 정답은 ${correctAnswer}입니다. 해설: ${questionData.reason}`;
+            speak(feedbackText);
+
+            feedbackMessage.textContent = isCorrect ? "정답입니다! 🎉" : `오답입니다. 😭 (정답: ${correctAnswer})`;
+            feedbackMessage.className = isCorrect ? 'feedback-message feedback-correct' : 'feedback-message feedback-incorrect';
+            
+            if (isCorrect) {
+                score += 10;
+            }
+
+            answerContainer.style.display = 'block';
+            oxButtons.forEach(btn => btn.disabled = true);
+            nextButton.style.display = 'block';
+        }
+
+        /**
+         * 다음 문제로 이동
+         */
+        function nextQuestion() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < TOTAL_QUIZ_COUNT) {
+                updateSlide(true); 
+            } else {
+                showCompletionScreen();
+            }
+        }
+
+        /**
+         * 퀴즈 완료 화면 표시
+         */
+        function showCompletionScreen() {
+            const finalScore = `${score}점`;
+            document.getElementById('scoreDisplay').textContent = finalScore;
+            currentQuestionIndex = TOTAL_QUIZ_COUNT; 
+            updateSlide(); 
+            
+            speak(`퀴즈가 완료되었습니다! 최종 점수는 ${finalScore}입니다.`);
+        }
+
+        /**
+         * 퀴즈를 처음 상태로 재시작
+         */
+        function restartQuiz() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            initQuiz(); 
+        }
+
+        // 초기 로드 시 퀴즈 초기화 및 시작
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>

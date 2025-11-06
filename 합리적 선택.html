@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O/X 퀴즈 | 합리적 선택의 의미와 한계 (10문제)</title>
+    <style>
+        /* =================== 1. 반응형 및 기본 스타일 (CSS) =================== */
+
+        :root {
+            --bg-color: #f0f8ff;    /* AliceBlue */
+            --container-color: #fffacd; /* LemonChiffon */
+            --primary-color: #4682b4; /* SteelBlue */
+            --correct-color: #2e8b57; /* SeaGreen */
+            --incorrect-color: #a52a2a; /* Brown */
+            --o-button-color: #98fb98; /* PaleGreen */
+            --x-button-color: #ffb6c1; /* LightPink */
+            --font-size-q: 1.875rem; 
+            --font-size-h1: 2.2rem;
+        }
+
+        /* 미디어 쿼리: 모바일 최적화 (폰트 크기 조정) */
+        @media (max-width: 600px) {
+            :root {
+                --font-size-q: 1.5rem; 
+                --font-size-h1: 1.8rem;
+            }
+            .ox-button {
+                padding: 15px 30px !important;
+                font-size: 2.0rem !important;
+            }
+            .question-text {
+                margin-bottom: 20px !important;
+            }
+            .feedback-message {
+                font-size: 1.8rem !important;
+            }
+            .answer-reason {
+                font-size: 1.1rem !important;
+            }
+            .quiz-container {
+                padding: 20px 15px;
+            }
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background-color: var(--bg-color); 
+            margin: 0;
+            padding: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow: auto; 
+        }
+
+        .quiz-container {
+            width: 95%; 
+            max-width: 900px; 
+            min-height: 90vh; 
+            background-color: var(--container-color); 
+            padding: 30px 30px; 
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); 
+            position: relative;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: var(--font-size-h1); 
+            font-weight: 700;
+        }
+        
+        .quiz-wrapper {
+            flex-grow: 1; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        .quiz-track {
+            display: flex;
+            height: 100%; 
+            transition: transform 0.5s ease-in-out;
+            margin: 0 -30px; 
+        }
+
+        .quiz-slide {
+            min-width: 100%; 
+            height: 100%; 
+            box-sizing: border-box;
+            padding: 10px 30px; 
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            overflow-y: auto; 
+        }
+
+        .question-content {
+            flex-grow: 1;
+            padding-bottom: 20px; 
+        }
+
+        .question-number {
+            font-size: 1.5rem; 
+            color: var(--primary-color); 
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speaker-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--correct-color);
+            transition: color 0.1s;
+        }
+        .speaker-icon:hover {
+            color: var(--primary-color);
+        }
+
+        .question-text {
+            font-size: var(--font-size-q); 
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 800; 
+            color: #1a1a1a;
+        }
+
+        .ox-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 40px; 
+            margin-top: 15px; 
+            margin-bottom: 15px;
+        }
+
+        .ox-button {
+            padding: 18px 50px;
+            font-size: 2.5rem; 
+            font-weight: 900;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex-grow: 1;
+            max-width: 180px;
+        }
+        .ox-button.O { background-color: var(--o-button-color); color: var(--correct-color); }
+        .ox-button.X { background-color: var(--x-button-color); color: var(--incorrect-color); }
+        .ox-button:disabled { opacity: 0.7; cursor: default; }
+
+        .feedback-message {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            min-height: 35px; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .feedback-correct { color: var(--correct-color); }
+        .feedback-incorrect { color: var(--incorrect-color); }
+
+        .answer-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fcfcfc; 
+            border-left: 6px solid var(--primary-color); 
+            border-radius: 8px;
+            text-align: left;
+            display: none; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .answer-result {
+            font-size: 1.7rem; 
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .answer-reason {
+            font-size: 1.3rem; 
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .next-button {
+            padding: 15px 30px;
+            background-color: var(--primary-color); 
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 20px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s;
+            display: none; 
+            align-self: center;
+            flex-shrink: 0; 
+        }
+        .next-button:active {
+            transform: translateY(1px);
+        }
+
+        .completion-slide {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            padding: 60px 0;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>핵심 개념 O/X 퀴즈 | 합리적 선택의 의미와 한계 (10문제)</h1>
+        
+        <div class="quiz-wrapper">
+            <div class="quiz-track" id="quizTrack">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // =================== 3. 합리적 선택 개념 10문제 풀 ===================
+        const allQuestions = [
+            {q: "희소성 때문에 인간은 선택의 문제에 직면하며, 이는 합리적 선택을 해야 하는 근본적인 이유가 된다.", a: "O", reason: "경제 활동은 희소성을 전제로 하며, 희소하기 때문에 자원을 효율적으로 사용하려는 합리적 선택이 필요합니다."},
+            {q: "합리적 선택은 선택으로 얻는 편익이 **명시적 비용**과 **암묵적 비용**을 합한 총 기회비용보다 클 때 이루어진다.", a: "O", reason: "합리적 선택의 기준은 '편익 > 기회비용'입니다. 기회비용은 포기한 대안의 가치(암묵적 비용)와 실제 지출(명시적 비용)을 모두 포함합니다."},
+            {q: "기회비용 중 **암묵적 비용**은 실제로 금전 지출이 발생한 비용을 의미한다.", a: "X", reason: "암묵적 비용은 실제로 돈을 지출하지는 않았지만, 포기한 대안 중 가장 큰 가치를 말합니다. 금전 지출이 있는 비용은 명시적 비용입니다."},
+            {q: "대학 등록금은 명시적 비용에 해당하지만, 학업 때문에 포기한 아르바이트 소득은 기회비용에 포함되지 않는다.", a: "X", reason: "아르바이트 소득은 포기한 대안의 가치(암묵적 비용)로서 기회비용에 반드시 포함됩니다."},
+            {q: "정보 탐색에 드는 시간과 노력은 희소한 자원의 사용이므로, 합리적 선택 과정에서 **비용**으로 고려되어야 한다.", a: "O", reason: "정보를 얻기 위한 모든 활동(시간, 노력, 금전)은 기회비용으로 측정될 수 있습니다."},
+            {q: "개인의 합리적 선택은 항상 사회 전체의 이익으로 이어지므로, **사회적 비합리성**을 초래하는 경우는 없다.", a: "X", reason: "'공유지의 비극'처럼, 개인의 합리적 선택이 모여 사회 전체의 자원 고갈이나 환경 파괴 등 비합리적 결과를 초래할 수 있습니다."},
+            {q: "합리적 선택의 한계 중 하나는 개인의 선택이 시장 가격에 반영되지 않는 **외부 효과**를 간과하기 쉽다는 점이다.", a: "O", reason: "선택자는 자신의 사적 이익만 고려하고, 제3자에게 미치는 긍정적/부정적 효과(외부 효과)는 무시하는 경향이 있습니다."},
+            {q: "**매몰 비용**(이미 지출되어 회수가 불가능한 비용)은 합리적 선택을 할 때 미래의 결정에 영향을 주어서는 안 된다.", a: "O", reason: "매몰 비용은 이미 발생하여 어떤 선택을 하든 되돌릴 수 없으므로, 미래의 합리적인 선택 판단 기준(편익과 기회비용)에서 제외해야 합니다."},
+            {q: "합리적 선택의 편익과 비용은 반드시 금전적 가치로만 측정해야 하며, 심리적 만족감 같은 **비금전적 가치**는 고려할 수 없다.", a: "X", reason: "선택의 편익과 비용에는 심리적 만족감, 자부심, 스트레스 등 비금전적인 요소도 포함될 수 있습니다."},
+            {q: "현실의 경제 주체들은 정보 부족, 시간 제약 등으로 인해 **완벽한 정보**를 가지고 합리적 선택을 하는 것은 사실상 어렵다.", a: "O", reason: "정보 탐색의 한계와 비용 문제 때문에 현실에서는 제한된 합리성(bounded rationality)에 기초하여 선택하게 됩니다."},
+        ];
+
+        // =================== 4. 퀴즈 실행 및 TTS 로직 (JavaScript) ===================
+
+        const TOTAL_QUIZ_COUNT = allQuestions.length; // 10문제 고정 출제
+        let selectedQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let ttsActivated = false; 
+
+        const quizTrack = document.getElementById('quizTrack');
+        const synth = window.speechSynthesis; 
+
+        /**
+         * TTS: 텍스트를 음성으로 읽어줍니다. 
+         */
+        function speak(text) {
+            if (!ttsActivated) return;
+            if (!synth) return;
+
+            if (synth.speaking) {
+                synth.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+
+            const voices = synth.getVoices();
+            const koreanVoice = voices.find(voice => voice.lang.startsWith('ko'));
+            
+            if (koreanVoice) {
+                utterance.voice = koreanVoice;
+            }
+
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            synth.speak(utterance);
+        }
+        
+        /**
+         * TTS 기능을 강제로 활성화합니다. (브라우저 정책 우회 시도)
+         */
+        function activateTTS() {
+            if (ttsActivated) return;
+            
+            const testUtterance = new SpeechSynthesisUtterance(" ");
+            synth.speak(testUtterance);
+            
+            testUtterance.onend = () => {
+                 ttsActivated = true;
+                 console.log("TTS 기능이 성공적으로 활성화되었습니다.");
+                 speakQuestion(currentQuestionIndex); 
+            };
+            
+            if (ttsActivated === false) {
+                 ttsActivated = true;
+            }
+        }
+
+        /**
+         * 퀴즈 HTML 생성 및 초기화
+         */
+        function initQuiz() {
+            ttsActivated = false; 
+            if (synth.speaking) synth.cancel();
+
+            // 문제 배열을 섞어 무작위 출제
+            selectedQuestions = allQuestions.sort(() => Math.random() - 0.5); 
+            currentQuestionIndex = 0;
+            score = 0;
+            quizTrack.innerHTML = ''; 
+
+            selectedQuestions.forEach((qData, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'quiz-slide';
+                slide.setAttribute('data-answer', qData.a);
+                slide.id = `slide-${index}`;
+
+                const questionHTML = `
+                    <div class="question-content">
+                        <div class="question-number">
+                            문제 ${index + 1}/${TOTAL_QUIZ_COUNT}
+                            <span class="speaker-icon" onclick="speakQuestion(${index})">🔊</span>
+                        </div>
+                        <div class="question-text" id="q-text-${index}">${qData.q}</div>
+                        <div class="ox-buttons">
+                            <button class="ox-button O" onclick="checkAnswer(this, 'O')">O</button>
+                            <button class="ox-button X" onclick="checkAnswer(this, 'X')">X</button>
+                        </div>
+                        <div class="feedback-message" id="feedback-${index}"></div>
+                        <div class="answer-container">
+                            <div class="answer-result">정답: ${qData.a}</div>
+                            <div class="answer-reason">
+                                <strong>해설:</strong> ${qData.reason}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="next-button" onclick="nextQuestion()">${index === TOTAL_QUIZ_COUNT - 1 ? '결과 보기' : '다음 문제'}</button>
+                `;
+                slide.innerHTML = questionHTML;
+                quizTrack.appendChild(slide);
+            });
+
+            // 완료 화면 생성
+            const completionSlide = document.createElement('div');
+            completionSlide.className = 'quiz-slide completion-slide';
+            completionSlide.id = 'completionScreen';
+            completionSlide.innerHTML = `
+                <p>✨ 퀴즈가 완료되었습니다! ✨</p>
+                <p>최종 점수: <span id="scoreDisplay">0점</span> / ${TOTAL_QUIZ_COUNT * 10}점</p>
+                <button class="next-button restart-button" style="display: block;" onclick="restartQuiz()">다시 시작</button>
+            `;
+            quizTrack.appendChild(completionSlide);
+
+            updateSlide(true); 
+        }
+
+        /**
+         * 현재 문제의 텍스트를 읽어줍니다.
+         */
+        function speakQuestion(index) {
+            if (index >= selectedQuestions.length) return;
+            const questionText = document.getElementById(`q-text-${index}`).textContent;
+            const fullText = `문제 ${index + 1}번. ${questionText}. 오 또는 엑스 중 답을 선택하세요.`;
+            speak(fullText);
+        }
+
+        /**
+         * 슬라이드 위치 업데이트 및 음성 재생
+         */
+        function updateSlide(shouldSpeak = false) {
+            const offset = -currentQuestionIndex * 100;
+            quizTrack.style.transform = `translateX(${offset}%)`;
+
+            if (shouldSpeak && currentQuestionIndex < TOTAL_QUIZ_COUNT) {
+                setTimeout(() => {
+                    if(ttsActivated) {
+                        speakQuestion(currentQuestionIndex);
+                    } 
+                }, 100); 
+            }
+        }
+
+        /**
+         * O/X 버튼 클릭 시 정답 확인 및 피드백 제공
+         */
+        function checkAnswer(button, selectedAnswer) {
+            if (!ttsActivated) {
+                activateTTS();
+            }
+            
+            const currentSlide = button.closest('.quiz-slide');
+            if (currentQuestionIndex >= selectedQuestions.length) return; 
+
+            const questionData = selectedQuestions[currentQuestionIndex];
+            const correctAnswer = questionData.a;
+            
+            const answerContainer = currentSlide.querySelector('.answer-container');
+            const nextButton = currentSlide.querySelector('.next-button');
+            const oxButtons = currentSlide.querySelectorAll('.ox-button');
+            const feedbackMessage = currentSlide.querySelector('.feedback-message');
+
+            if (oxButtons[0].disabled) { return; } 
+
+            let isCorrect = (selectedAnswer === correctAnswer);
+            
+            let feedbackText = isCorrect ? "정답입니다!" : "오답입니다.";
+            feedbackText += ` 정답은 ${correctAnswer}입니다. 해설: ${questionData.reason}`;
+            speak(feedbackText);
+
+            feedbackMessage.textContent = isCorrect ? "정답입니다! 🎉" : `오답입니다. 😭 (정답: ${correctAnswer})`;
+            feedbackMessage.className = isCorrect ? 'feedback-message feedback-correct' : 'feedback-message feedback-incorrect';
+            
+            if (isCorrect) {
+                score += 10;
+            }
+
+            answerContainer.style.display = 'block';
+            oxButtons.forEach(btn => btn.disabled = true);
+            nextButton.style.display = 'block';
+        }
+
+        /**
+         * 다음 문제로 이동
+         */
+        function nextQuestion() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < TOTAL_QUIZ_COUNT) {
+                updateSlide(true); 
+            } else {
+                showCompletionScreen();
+            }
+        }
+
+        /**
+         * 퀴즈 완료 화면 표시
+         */
+        function showCompletionScreen() {
+            const finalScore = `${score}점`;
+            document.getElementById('scoreDisplay').textContent = finalScore;
+            currentQuestionIndex = TOTAL_QUIZ_COUNT; 
+            updateSlide(); 
+            
+            speak(`퀴즈가 완료되었습니다! 최종 점수는 ${finalScore}입니다.`);
+        }
+
+        /**
+         * 퀴즈를 처음 상태로 재시작
+         */
+        function restartQuiz() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            initQuiz(); 
+        }
+
+        // 초기 로드 시 퀴즈 초기화 및 시작
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>

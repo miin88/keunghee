@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 O/X 퀴즈 | 국제 무역과 지속 가능 발전 (30문제 중 10문제)</title>
+    <style>
+        /* =================== 1. 반응형 및 기본 스타일 (CSS) =================== */
+
+        :root {
+            --bg-color: #f0f8ff;    /* AliceBlue */
+            --container-color: #fffacd; /* LemonChiffon */
+            --primary-color: #4682b4; /* SteelBlue */
+            --correct-color: #2e8b57; /* SeaGreen */
+            --incorrect-color: #a52a2a; /* Brown */
+            --o-button-color: #98fb98; /* PaleGreen */
+            --x-button-color: #ffb6c1; /* LightPink */
+            --font-size-q: 1.875rem; 
+            --font-size-h1: 2.2rem;
+            --quiz-width: 900px;
+        }
+
+        /* 미디어 쿼리: 모바일 최적화 */
+        @media (max-width: 600px) {
+            :root {
+                --font-size-q: 1.5rem; 
+                --font-size-h1: 1.8rem;
+            }
+            .ox-button {
+                padding: 15px 30px !important;
+                font-size: 2.0rem !important;
+            }
+            .feedback-message {
+                font-size: 1.8rem !important;
+            }
+            .answer-reason {
+                font-size: 1.1rem !important;
+            }
+            .quiz-container {
+                padding: 20px 15px;
+            }
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background-color: var(--bg-color); 
+            margin: 0;
+            padding: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow: auto; 
+        }
+
+        .quiz-container {
+            width: 95%; 
+            max-width: var(--quiz-width); 
+            min-height: 90vh; 
+            background-color: var(--container-color); 
+            padding: 30px 30px; 
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); 
+            position: relative;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: var(--font-size-h1); 
+            font-weight: 700;
+        }
+        
+        .quiz-wrapper {
+            flex-grow: 1; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        .quiz-track {
+            display: flex;
+            height: 100%; 
+            transition: transform 0.5s ease-in-out;
+            margin: 0 -30px; 
+        }
+
+        .quiz-slide {
+            min-width: 100%; 
+            height: 100%; 
+            box-sizing: border-box;
+            padding: 10px 30px; 
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            overflow-y: auto; 
+        }
+
+        .question-content {
+            flex-grow: 1;
+            padding-bottom: 20px; 
+        }
+
+        .question-number {
+            font-size: 1.5rem; 
+            color: var(--primary-color); 
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speaker-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--correct-color);
+            transition: color 0.1s;
+        }
+        .speaker-icon:hover {
+            color: var(--primary-color);
+        }
+
+        .question-text {
+            font-size: var(--font-size-q); 
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 800; 
+            color: #1a1a1a;
+        }
+
+        .ox-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 40px; 
+            margin-top: 15px; 
+            margin-bottom: 15px;
+        }
+
+        .ox-button {
+            padding: 18px 50px;
+            font-size: 2.5rem; 
+            font-weight: 900;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex-grow: 1;
+            max-width: 180px;
+        }
+        .ox-button.O { background-color: var(--o-button-color); color: var(--correct-color); }
+        .ox-button.X { background-color: var(--x-button-color); color: var(--incorrect-color); }
+        .ox-button:disabled { opacity: 0.7; cursor: default; }
+
+        .feedback-message {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            min-height: 35px; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .feedback-correct { color: var(--correct-color); }
+        .feedback-incorrect { color: var(--incorrect-color); }
+
+        .answer-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fcfcfc; 
+            border-left: 6px solid var(--primary-color); 
+            border-radius: 8px;
+            text-align: left;
+            display: none; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .answer-result {
+            font-size: 1.7rem; 
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .answer-reason {
+            font-size: 1.3rem; 
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .next-button {
+            padding: 15px 30px;
+            background-color: var(--primary-color); 
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 20px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s;
+            display: none; 
+            align-self: center;
+            flex-shrink: 0; 
+        }
+        .next-button:active {
+            transform: translateY(1px);
+        }
+
+        .completion-slide {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            padding: 60px 0;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>랜덤 O/X 퀴즈 | 국제 무역과 지속 가능 발전 10문제</h1>
+        
+        <div class="quiz-wrapper">
+            <div class="quiz-track" id="quizTrack">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // =================== 3. 30문제 풀 (문제 은행 - 교재 '국제무역.pdf' 기반) ===================
+        const questionPool = [
+            // [국제 분업과 무역의 필요성]
+            {q: "국제 무역은 자원, 공산품뿐만 아니라 자본과 기술 등의 생산요소 거래도 포함하는 국제 거래이다.", a: "O", reason: "국제 무역의 품목은 과거의 상품에서 생산요소와 지식재산권 등으로 그 범위가 확대되고 있습니다."},
+            {q: "국제 분업이란 각 나라가 무역에 가장 유리한 상품을 특화하여 생산하는 것을 의미한다.", a: "O", reason: "특화는 전문성과 생산성을 높여 효율적인 분업을 가능하게 합니다."},
+            {q: "특화란 국가가 보유한 생산 요소를 특정 재화 생산에 집중 투입하여 생산성을 떨어뜨리는 방식이다.", a: "X", reason: "특화는 전문성과 생산성을 **높이는** 생산 방식입니다."},
+            {q: "국제 분업과 무역은 무역 당사국 중 절대 우위국에게만 직접적인 경제적 이익을 가져다준다.", a: "X", reason: "국제 분업과 무역은 **무역 당사국 모두에게** 직접적인 경제적 이익을 가져다줍니다."},
+            {q: "무역 발생의 궁극적인 원리는 절대 우위 원리만으로 설명된다.", a: "X", reason: "무역 발생 원리의 핵심은 **비교 우위 원리**입니다."},
+            {q: "비교 우위 원리에 따르면, 모든 상품 생산에 절대 우위가 없는 국가도 무역을 통해 이익을 얻을 수 있다.", a: "O", reason: "두 상품 간의 기회비용을 비교하여 더 적은 비용이 드는 상품에 특화하면 됩니다."},
+            {q: "국제 무역은 생산 요소의 지역적 분포 차이에서 비롯된 생산비의 차이로 인해 발생한다.", a: "O", reason: "생산비의 차이가 국제 분업의 경제적 이익을 발생시키는 근본 원인 중 하나입니다."},
+            
+            // [절대 우위와 비교 우위 (교재 표 기반 문제)]
+            {q: "갑국(가방 1, 신발 2), 을국(가방 4, 신발 3) 표를 볼 때, 을국은 가방과 신발 모두에 절대 우위를 가진다.", a: "O", reason: "을국은 갑국보다 가방(4>1), 신발(3>2) 생산량이 모두 많으므로 절대 우위입니다. (교재 P.4 표 기준)"},
+            {q: "위 표 기준, 신발 1개 생산의 기회비용은 갑국이 가방 1/2개, 을국이 가방 4/3개이므로, 갑국이 신발 생산에 비교 우위가 있다.", a: "O", reason: "갑국의 기회비용(1/2) < 을국의 기회비용(4/3)이므로 갑국이 신발에 비교 우위가 있습니다. (교재 P.4 해설 기준)"},
+            {q: "위 표 기준, 가방 1개 생산의 기회비용은 갑국이 신발 2개, 을국이 신발 3/4개이므로, 갑국이 가방 생산에 비교 우위가 있다.", a: "X", reason: "가방 생산의 기회비용은 을국(3/4) < 갑국(2)이므로, **을국**이 가방 생산에 비교 우위가 있습니다."},
+            {q: "비교 우위 원리에 따라 갑국은 가방을, 을국은 신발을 특화하여 생산한 후 거래하게 된다.", a: "X", reason: "비교 우위 원리에 따라 갑국은 **신발**을, 을국은 **가방**을 특화 생산해야 합니다."},
+            
+            // [지속 가능 발전에 기여하는 국제무역의 방안]
+            {q: "지속 가능 발전에 기여하는 국제 무역은 경제적 발전, 사회적 형평성, 환경 보전의 조화를 추구한다.", a: "O", reason: "지속 가능 발전은 세 가지 핵심 요소의 균형을 강조합니다."},
+            {q: "지속 가능한 소비 및 생산을 촉진하기 위한 국제 사회의 노력은 무역의 중요한 방안이다.", a: "O", reason: "교재 P.2에 제시된 지속 가능 무역의 방안 중 첫 번째 항목입니다."},
+            {q: "친환경 기술에 대한 연구 개발 확대는 지속 가능 무역의 방안 중 하나이지만, 국제적 협력은 필요 없다.", a: "X", reason: "친환경 기술에 대한 **연구 개발 확대**는 물론, **선진국의 기술 이전 및 협력**이 국제 무역의 지속 가능성에 중요합니다."},
+            {q: "선진국의 기술 이전 및 협력은 개발 도상국의 지속 가능 발전을 지원하는 핵심 방안이다.", a: "O", reason: "기술 격차 해소와 환경 효율성 향상을 위해 필수적입니다."},
+            {q: "공정 무역은 국가 간 경제적 불평등을 심화시키므로 지양해야 한다.", a: "X", reason: "공정 무역은 **경제적 불평등 해결 및 공정 무역 촉진**에 기여하는 방안입니다."},
+            {q: "지속 가능한 국제 무역을 위해서는 환경 오염 유발 상품의 교역을 자유롭게 확대해야 한다.", a: "X", reason: "환경 기준을 강화하고 외부 불경제를 유발하는 상품에 대한 규제가 필요합니다."},
+            {q: "공정 무역 제품은 개도국 생산자에게 시장 가격보다 낮은 가격을 보장하여 경쟁력을 높여준다.", a: "X", reason: "공정 무역은 **최소 보장 가격**을 통해 시장 가격 변동으로부터 생산자를 보호하고 정당한 대가를 지불합니다."},
+            {q: "무역과 환경 기준을 연계하는 것은 개도국의 수출에 대한 비관세 장벽으로 작용할 수 있다는 비판이 있다.", a: "O", reason: "높은 환경 기준을 맞추는 것이 개도국에게는 기술적, 재정적 부담이 될 수 있기 때문입니다."},
+            {q: "친환경 기술을 '환경 상품'으로 분류하여 무역 장벽을 낮추는 노력은 지속 가능 무역에 기여한다.", a: "O", reason: "환경 상품의 자유화는 기술 보급을 촉진하여 전 지구적 환경 문제 해결에 도움을 줍니다."},
+            
+            // [무역과 지속 가능 발전 통합 개념]
+            {q: "무역을 통해 자국에서 얻기 힘든 상품을 얻는 것은 국제 분업과 무역의 중요한 필요성 중 하나이다.", a: "O", reason: "국제 무역은 자원 및 생산 요소의 지역적 분포 차이를 극복하게 해줍니다."},
+            {q: "특화란 국가가 보유한 생산 요소를 특정 재화의 생산에 집중 투입하여 전문성과 생산성을 높이는 생산 방식이다.", a: "O", reason: "교재 P.1에 명시된 특화의 정의입니다."},
+            {q: "지속 가능 발전은 '미래 세대의 필요'보다 '현재 세대의 경제 성장'을 절대적으로 우선한다.", a: "X", reason: "지속 가능 발전은 미래 세대의 필요를 해치지 않는 **세대 간 형평성**을 강조합니다."},
+            {q: "국제 무역은 각 나라 소비자들이 더 다양한 상품을 더 저렴한 가격에 소비할 수 있게 하는 긍정적인 영향을 준다.", a: "O", reason: "무역의 경제적 이익 중 하나입니다."},
+            {q: "환경 문제 해결을 위해 국제 사회는 지속 가능한 소비와 생산을 촉진하는 노력을 할 필요가 없다.", a: "X", reason: "교재 P.2에 제시된 지속 가능 무역의 방안 중 하나로, 국제 사회의 노력이 필요합니다."},
+            {q: "무역은 자국 생산비가 많이 드는 상품을 수입하고, 적게 드는 상품을 수출하여 이익을 얻는다.", a: "O", reason: "생산비가 적게 드는 상품에 특화(수출)하고, 많이 드는 상품은 무역으로 보완(수입)하는 것이 이익입니다."},
+            {q: "기업의 사회적 책임(CSR)은 지속 가능한 국제 무역 실천에 있어 부차적인 요소이다.", a: "X", reason: "ESG 경영과 같이 기업의 윤리적이고 사회적인 책임은 지속 가능한 무역의 핵심 요소입니다."},
+            {q: "국제 분업은 생산 요소의 지역적 분포 차이로 인해 발생된 생산비의 차이로 인해 발생한다.", a: "O", reason: "이는 교재 P.1에 명시된 국제 분업과 무역 발생의 근본적인 원인입니다."},
+            {q: "비교 우위 원리를 따르지 않고 절대 우위 상품만 특화하더라도, 항상 양국 모두 무역 이익을 본다.", a: "X", reason: "비교 우위가 무역 이익을 극대화하는 원리이며, 절대 우위만 고려할 경우 이익을 얻지 못하거나 무역 자체가 성립하지 않을 수 있습니다."},
+            {q: "지속 가능한 무역을 위해 선진국은 친환경 기술에 대한 연구 개발을 줄여야 한다.", a: "X", reason: "친환경 기술에 대한 연구 개발을 **확대**하는 것이 지속 가능 무역의 방안 중 하나입니다."},
+            {q: "공정 무역은 소득 분배의 형평성 문제 해결에 기여하는 사회적 책임 무역의 한 형태이다.", a: "O", reason: "공정 무역은 경제적 불평등 해소를 목적으로 합니다."},
+            {q: "국제 무역이 활발해지면 각 나라의 문화적 정체성이 무조건 약화된다.", a: "X", reason: "문화 교류가 활발해져 다양성이 증진될 수도 있는 양면성을 가집니다."},
+        ];
+
+        // =================== 4. 퀴즈 실행 및 TTS 로직 (JavaScript) ===================
+
+        const QUIZ_COUNT = 10; // ★ 출제할 문제 수 (30문제 중 10문제)
+        const TOTAL_POOL_COUNT = questionPool.length;
+        
+        let selectedQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let ttsActivated = false; 
+
+        const quizTrack = document.getElementById('quizTrack');
+        const synth = window.speechSynthesis; 
+
+        function speak(text) {
+            if (!ttsActivated) return;
+            if (!synth) return;
+
+            if (synth.speaking) {
+                synth.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+
+            const voices = synth.getVoices();
+            const koreanVoice = voices.find(voice => voice.lang.startsWith('ko'));
+            
+            if (koreanVoice) {
+                utterance.voice = koreanVoice;
+            }
+
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            synth.speak(utterance);
+        }
+        
+        function activateTTS() {
+            if (ttsActivated) return;
+            
+            const testUtterance = new SpeechSynthesisUtterance(" ");
+            synth.speak(testUtterance);
+            
+            testUtterance.onend = () => {
+                 ttsActivated = true;
+                 speakQuestion(currentQuestionIndex); 
+            };
+            
+            if (ttsActivated === false) {
+                 ttsActivated = true; 
+            }
+        }
+
+        function initQuiz() {
+            ttsActivated = false; 
+            if (synth.speaking) synth.cancel();
+
+            // ★ 30문제 풀에서 10문제를 랜덤으로 선택
+            selectedQuestions = questionPool
+                .sort(() => Math.random() - 0.5) 
+                .slice(0, QUIZ_COUNT); 
+
+            currentQuestionIndex = 0;
+            score = 0;
+            quizTrack.innerHTML = ''; 
+
+            selectedQuestions.forEach((qData, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'quiz-slide';
+                slide.setAttribute('data-answer', qData.a);
+                slide.id = `slide-${index}`;
+
+                const questionHTML = `
+                    <div class="question-content">
+                        <div class="question-number">
+                            문제 ${index + 1}/${QUIZ_COUNT}
+                            <span class="speaker-icon" onclick="speakQuestion(${index})">🔊</span>
+                        </div>
+                        <div class="question-text" id="q-text-${index}">${qData.q}</div>
+                        <div class="ox-buttons">
+                            <button class="ox-button O" onclick="checkAnswer(this, 'O')">O</button>
+                            <button class="ox-button X" onclick="checkAnswer(this, 'X')">X</button>
+                        </div>
+                        <div class="feedback-message" id="feedback-${index}"></div>
+                        <div class="answer-container">
+                            <div class="answer-result">정답: ${qData.a}</div>
+                            <div class="answer-reason">
+                                <strong>해설:</strong> ${qData.reason}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="next-button" onclick="nextQuestion()">${index === QUIZ_COUNT - 1 ? '결과 보기' : '다음 문제'}</button>
+                `;
+                slide.innerHTML = questionHTML;
+                quizTrack.appendChild(slide);
+            });
+
+            const completionSlide = document.createElement('div');
+            completionSlide.className = 'quiz-slide completion-slide';
+            completionSlide.id = 'completionScreen';
+            completionSlide.innerHTML = `
+                <p>✨ 퀴즈가 완료되었습니다! ✨</p>
+                <p>최종 점수: <span id="scoreDisplay">0점</span> / ${QUIZ_COUNT * 10}점</p>
+                <button class="next-button restart-button" style="display: block;" onclick="restartQuiz()">다시 시작</button>
+            `;
+            quizTrack.appendChild(completionSlide);
+
+            updateSlide(true); 
+        }
+
+        function speakQuestion(index) {
+            if (index >= selectedQuestions.length) return;
+            const questionText = document.getElementById(`q-text-${index}`).textContent;
+            const fullText = `문제 ${index + 1}번. ${questionText}. 오 또는 엑스 중 답을 선택하세요.`;
+            speak(fullText);
+        }
+
+        function updateSlide(shouldSpeak = false) {
+            const offset = -currentQuestionIndex * 100;
+            quizTrack.style.transform = `translateX(${offset}%)`;
+
+            if (shouldSpeak && currentQuestionIndex < QUIZ_COUNT) {
+                setTimeout(() => {
+                    if(ttsActivated) {
+                        speakQuestion(currentQuestionIndex);
+                    } 
+                }, 100); 
+            }
+        }
+
+        function checkAnswer(button, selectedAnswer) {
+            if (!ttsActivated) {
+                activateTTS();
+            }
+            
+            const currentSlide = button.closest('.quiz-slide');
+            if (currentQuestionIndex >= selectedQuestions.length) return; 
+
+            const questionData = selectedQuestions[currentQuestionIndex];
+            const correctAnswer = questionData.a;
+            
+            const answerContainer = currentSlide.querySelector('.answer-container');
+            const nextButton = currentSlide.querySelector('.next-button');
+            const oxButtons = currentSlide.querySelectorAll('.ox-button');
+            const feedbackMessage = currentSlide.querySelector('.feedback-message');
+
+            if (oxButtons[0].disabled) { return; } 
+
+            let isCorrect = (selectedAnswer === correctAnswer);
+            
+            let feedbackText = isCorrect ? "정답입니다!" : "오답입니다.";
+            feedbackText += ` 정답은 ${correctAnswer}입니다. 해설: ${questionData.reason}`;
+            speak(feedbackText);
+
+            feedbackMessage.textContent = isCorrect ? "정답입니다! 🎉" : `오답입니다. 😭 (정답: ${correctAnswer})`;
+            feedbackMessage.className = isCorrect ? 'feedback-message feedback-correct' : 'feedback-message feedback-incorrect';
+            
+            if (isCorrect) {
+                score += 10;
+            }
+
+            answerContainer.style.display = 'block';
+            oxButtons.forEach(btn => btn.disabled = true);
+            nextButton.style.display = 'block';
+        }
+
+        function nextQuestion() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < QUIZ_COUNT) {
+                updateSlide(true); 
+            } else {
+                showCompletionScreen();
+            }
+        }
+
+        function showCompletionScreen() {
+            const finalScore = `${score}점`;
+            document.getElementById('scoreDisplay').textContent = finalScore;
+            currentQuestionIndex = QUIZ_COUNT; 
+            updateSlide(); 
+            
+            speak(`퀴즈가 완료되었습니다! 최종 점수는 ${finalScore}점입니다.`);
+        }
+
+        function restartQuiz() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            initQuiz(); 
+        }
+
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
